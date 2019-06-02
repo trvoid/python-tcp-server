@@ -1,10 +1,10 @@
 ################################################################################
-# Test TCP socket server.                                                      #
+# TCP socket server main.                                                      #
 ################################################################################
 
 import sys, os, traceback, logging, logging.handlers
 from tcp_server import TcpServer, ClientHandlerFactory
-from services import FileJoinService
+from services.file_join_service import FileJoinService
 
 ################################################################################
 # Constants                                                                    #
