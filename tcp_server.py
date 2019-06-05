@@ -20,6 +20,9 @@ REQUEST_MAGIC_NUMBER  = b'TRRQ'
 RESPONSE_MAGIC_NUMBER = b'TRRS'
 MESSAGE_HEADER_LENGTH = 16
 
+STATUS_OK = 0
+STATUS_SERVICE_ERROR = 1
+
 ################################################################################
 # Functions                                                                    #
 ################################################################################
@@ -113,18 +116,21 @@ class ResponseMessage:
     def __init__(self, request_id):
         self.request_id = request_id
         
-    def build_message(self, body_data):
+    def build_message(self, status, body_data):
         send_request_id = self.request_id.to_bytes(4, byteorder='little')
         
         result_length = len(body_data)
         send_result_length = result_length.to_bytes(4, byteorder='little')
         
-        reserved_area = bytes([0, 0, 0, 0])
+        status = status.to_bytes(1, byteorder='little')
+        
+        reserved_area = bytes([0, 0, 0])
         
         tx_data = (
             RESPONSE_MAGIC_NUMBER + 
             send_request_id + 
-            send_result_length + 
+            send_result_length +
+            status +            
             reserved_area + 
             body_data
         )
@@ -153,14 +159,22 @@ class ClientHandler:
                     
                     if len(self.rx_data) == (MESSAGE_HEADER_LENGTH + self.request.body_length):
                         self.request.body_data = bytes(self.rx_data[MESSAGE_HEADER_LENGTH:])
-                        result_data = self.service.process(self.request)
-                        
                         response = self.request.create_response()
-                        tx_data = response.build_message(result_data)
-    
-                        self.rx_data.clear()
-                        self.request = None
-                        self.tx_queue.put(tx_data)
+                        
+                        status = STATUS_OK
+                        result_data = None
+                        
+                        try:
+                            result_data = self.service.process(self.request)                            
+                        except Exception as ex:
+                            status = STATUS_SERVICE_ERROR
+                            result_data = traceback.format_exc().encode('utf-8')
+                        finally:
+                            tx_data = response.build_message(status, result_data)
+                            self.tx_queue.put(tx_data)
+                            
+                            self.rx_data.clear()
+                            self.request = None
                 
                 return len(data)
             else:

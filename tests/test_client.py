@@ -18,6 +18,9 @@ REQUEST_MAGIC_NUMBER  = b'TRRQ'
 RESPONSE_MAGIC_NUMBER = b'TRRS'
 MESSAGE_HEADER_LENGTH = 16
 
+STATUS_OK = 0
+STATUS_SERVICE_ERROR = 1
+
 ################################################################################
 # Functions                                                                    #
 ################################################################################
@@ -73,14 +76,17 @@ def parse_response_message(data):
     if len(data) < expected_total_length:
         raise ValueError(f'Short total message length: expected = {expected_total_length}, actual = {len(data)}')
     
+    # Status
+    status = data[12]
+    
     # Reserved area
-    reserved_area = data[12:16]
+    reserved_area = data[13:16]
     
     # Result data
     result_data_arr = data[16:16+result_length]
     result_data = result_data_arr.decode('utf-8')
 
-    return request_id, result_data
+    return request_id, status, result_data
 
 def do_test(thread_name, connection_count, loop_per_connection, file_a, file_b):
     send_count = 0
@@ -108,9 +114,9 @@ def do_test(thread_name, connection_count, loop_per_connection, file_a, file_b):
         
             rx_data = client_socket.recv(RECV_BUFSIZE)
         
-            _request_id, result_data = parse_response_message(rx_data)
+            _request_id, status, result_data = parse_response_message(rx_data)
         
-            if request_id != _request_id:
+            if status != STATUS_OK:
                 error_count = error_count + 1
             print(f'[{thread_name}] send = {send_count:7}, error = {error_count:7}, result = {result_data}', end = '\r')
         
