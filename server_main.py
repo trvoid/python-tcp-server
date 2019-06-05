@@ -76,11 +76,11 @@ try:
     init_logger(log_file_name, log_max_bytes, log_backup_count)
     logger = logging.getLogger()
     logger.info(f'SW version: {sw_version}')
-
+    
     tcp_server = TcpServer("svc-server")
     tcp_server.run(port, ClientHandlerFactory(service_table[service_name]))
 except Exception as ex:
     logger.error(traceback.format_exc())
 finally:
     logger.info('Server stopped.')
-    logger.shutdown()
+    logging.shutdown()
