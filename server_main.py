@@ -5,6 +5,7 @@
 import sys, os, traceback, logging, logging.handlers
 from tcp_server import TcpServer, ClientHandlerFactory
 from services.file_join_service import FileJoinService
+from test.raise_error_service import RaiseErrorService
 
 ################################################################################
 # Constants                                                                    #
@@ -51,7 +52,8 @@ sw_version = '1.0.0'
 port = 50000
 
 service_table = {
-        'file-join': FileJoinService()
+        'file-join': FileJoinService(),
+        'raise-error': RaiseErrorService()
     }
     
 ################################################################################
