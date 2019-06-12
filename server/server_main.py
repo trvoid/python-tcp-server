@@ -5,7 +5,7 @@
 import sys, os, traceback, logging, logging.handlers
 from tcp_server import TcpServer, ClientHandlerFactory
 from services.file_join_service import FileJoinService
-from tests.raise_error_service import RaiseErrorService
+from services.raise_error_service import RaiseErrorService
 
 ################################################################################
 # Constants                                                                    #
